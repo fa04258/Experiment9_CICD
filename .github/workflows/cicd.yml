@@ -1,0 +1,54 @@
+
+# Experiment 9: CI/CD workflow for an AI system
+
+# Run the workflow when code is pushed or a pull request is opened
+name: AI Model CI-CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-train-deploy:
+    # Run the workflow on a fresh Ubuntu runner
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Download the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Install Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Step 3: Install required libraries
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas scikit-learn joblib
+
+      # Step 4: Run automated model tests
+      - name: Run automated tests
+        run: python test_model.py
+
+      # Step 5: Retrain the model
+      - name: Train machine-learning model
+        run: python train_model.py
+
+      # Step 6: Verify the trained model artifact
+      - name: Verify model artifact
+        run: |
+          python -c "import joblib; m=joblib.load('model.joblib'); print('Model artifact loaded successfully:', type(m).__name__)"
+
+      # Step 7: Upload the trained model as a workflow artifact
+      - name: Upload trained model
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-ai-model
+          path: model.joblib
